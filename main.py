@@ -46,10 +46,10 @@ async def get_paste(paste_id: str, format: Optional[str] = "plain"):
     
     text = storage[paste_id]
     
-    if format == "plain":
-        return PlainTextResponse(content=text)
-    else:
+    if format == "json":
         return PasteData(id=paste_id, text=text)
+    else:
+        return PlainTextResponse(content=text)
 
 @app.get("/")
 async def root():
@@ -57,7 +57,7 @@ async def root():
         "message": "Simple Paste Server",
         "usage": {
             "post": "POST /paste with JSON body containing 'text' field",
-            "get": "GET /paste/{id}?format=json|plain"
+            "get": "GET /paste/{id}?format=plain|json (default: plain)"
         }
     }
 

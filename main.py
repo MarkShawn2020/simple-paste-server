@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response, Form
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 import uuid
@@ -8,9 +8,6 @@ app = FastAPI(title="Simple Paste Server")
 
 storage: Dict[str, str] = {}
 
-class PasteRequest(BaseModel):
-    text: str
-    output_format: Optional[str] = "json"
 
 class PasteResponse(BaseModel):
     id: str
@@ -24,14 +21,14 @@ class PasteData(BaseModel):
     text: str
 
 @app.post("/paste")
-async def create_paste(request: Request, paste: PasteRequest):
-    if not paste.text:
+async def create_paste(text: str = Form(...), output_format: Optional[str] = Form("file_url")):
+    if not text.strip():
         raise HTTPException(status_code=400, detail="Text content is required")
-    
     paste_id = str(uuid.uuid4())
-    storage[paste_id] = paste.text
+    storage[paste_id] = text
     
-    base_url = f"{request.url.scheme}://{request.url.netloc}"
+    # 获取base_url需要通过依赖注入或其他方式
+    base_url = "http://localhost:8000"
     url = f"{base_url}/paste/{paste_id}"
     
     response_data = PasteResponse(
@@ -42,11 +39,11 @@ async def create_paste(request: Request, paste: PasteRequest):
         fileUrl=f"{url}?format=file"
     )
     
-    if paste.output_format == "url":
+    if output_format == "url":
         return PlainTextResponse(content=url)
-    elif paste.output_format == "plain_url":
+    elif output_format == "plain_url":
         return PlainTextResponse(content=f"{url}?format=plain")
-    elif paste.output_format == "file_url":
+    elif output_format == "file_url":
         return PlainTextResponse(content=f"{url}?format=file")
     else:
         return response_data
@@ -74,7 +71,7 @@ async def root():
     return {
         "message": "Simple Paste Server",
         "usage": {
-            "post": "POST /paste with JSON body containing 'text' field and optional 'output_format' (json|url|plain_url|file_url)",
+            "post": "POST /paste with form data: text=content&output_format=json|url|plain_url|file_url (default: file_url)",
             "get": "GET /paste/{id}?format=file|plain|json (default: file)"
         }
     }

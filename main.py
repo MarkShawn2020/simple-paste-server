@@ -40,7 +40,7 @@ async def create_paste(request: Request, paste: PasteRequest):
     )
 
 @app.get("/paste/{paste_id}")
-async def get_paste(paste_id: str, format: Optional[str] = "json"):
+async def get_paste(paste_id: str, format: Optional[str] = "plain"):
     if paste_id not in storage:
         raise HTTPException(status_code=404, detail="Paste not found")
     

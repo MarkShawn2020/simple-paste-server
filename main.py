@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 import uuid
@@ -16,6 +16,7 @@ class PasteResponse(BaseModel):
     url: str
     plainUrl: str
     jsonUrl: str
+    fileUrl: str
 
 class PasteData(BaseModel):
     id: str
@@ -36,11 +37,12 @@ async def create_paste(request: Request, paste: PasteRequest):
         id=paste_id,
         url=url,
         plainUrl=f"{url}?format=plain",
-        jsonUrl=f"{url}?format=json"
+        jsonUrl=f"{url}?format=json",
+        fileUrl=f"{url}?format=file"
     )
 
 @app.get("/paste/{paste_id}")
-async def get_paste(paste_id: str, format: Optional[str] = "plain"):
+async def get_paste(paste_id: str, format: Optional[str] = "file"):
     if paste_id not in storage:
         raise HTTPException(status_code=404, detail="Paste not found")
     
@@ -48,8 +50,14 @@ async def get_paste(paste_id: str, format: Optional[str] = "plain"):
     
     if format == "json":
         return PasteData(id=paste_id, text=text)
-    else:
+    elif format == "plain":
         return PlainTextResponse(content=text)
+    else:
+        return Response(
+            content=text,
+            media_type="text/vtt",
+            headers={"Content-Disposition": f"attachment; filename={paste_id}.vtt"}
+        )
 
 @app.get("/")
 async def root():
@@ -57,7 +65,7 @@ async def root():
         "message": "Simple Paste Server",
         "usage": {
             "post": "POST /paste with JSON body containing 'text' field",
-            "get": "GET /paste/{id}?format=plain|json (default: plain)"
+            "get": "GET /paste/{id}?format=file|plain|json (default: file)"
         }
     }
 

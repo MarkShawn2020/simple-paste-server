@@ -1,16 +1,16 @@
-[project]
+[tool.poetry]
 name = "simple-paste-server"
 version = "0.1.0"
-description = ""
-authors = [
-    {name = "markshawn2020",email = "shawninjuly@gmail.com"}
-]
+description = "Minimal REST API for text storage and retrieval"
+authors = ["markshawn2020 <shawninjuly@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-]
 
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+pydantic = "^2.5.0"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
